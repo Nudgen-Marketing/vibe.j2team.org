@@ -13,6 +13,8 @@ vibe.j2team.org — A collaborative vibe coding project by J2TEAM Community with
 - Vue Router 5
 - Pinia 3
 - @unhead/vue (document head/meta management)
+- @vueuse/core 14 — 200+ Vue composables (useMouse, useClipboard, useDark, useStorage, useIntersectionObserver, useLocalStorage, useMediaQuery, useWindowSize, etc.)
+- @iconify/vue — 200,000+ icons from 150+ icon sets via `<Icon icon="icon-set:icon-name" />` component
 
 ## Setup & Build
 
@@ -77,6 +79,44 @@ Key rules:
 
 Read `docs/DESIGN_SYSTEM.md` before making any visual changes.
 
+## Leveraging Installed Libraries
+
+### @vueuse/core (MUST use before writing custom code)
+
+Before implementing any browser/DOM/state logic, **check if VueUse already has a composable for it**. Common composables to use instead of custom code:
+
+- **Storage**: `useLocalStorage()`, `useSessionStorage()` — not `localStorage.getItem/setItem`
+- **DOM events**: `useEventListener()` — not manual `addEventListener/removeEventListener`
+- **Clipboard**: `useClipboard()` — not `navigator.clipboard` directly
+- **Dark mode**: `useDark()`, `useColorMode()` — not manual class toggling
+- **Timers**: `useInterval()`, `useTimeout()`, `useIntervalFn()` — not raw `setInterval/setTimeout`
+- **Mouse/Touch**: `useMouse()`, `usePointer()`, `useSwipe()` — not manual event handlers
+- **Viewport**: `useWindowSize()`, `useElementSize()`, `useIntersectionObserver()` — not manual resize/scroll listeners
+- **Media**: `useMediaQuery()` — not `window.matchMedia` directly
+- **Network**: `useFetch()`, `useOnline()` — not raw `fetch` with manual reactive state
+- **Animation**: `useTransition()`, `useRafFn()` — not manual `requestAnimationFrame`
+- **Reactivity**: `watchDebounced()`, `watchThrottled()`, `refDebounced()` — not custom debounce/throttle implementations
+
+Full list: https://vueuse.org/functions.html
+
+### @iconify/vue (MUST use for all icons)
+
+Use the `<Icon>` component for all icons instead of inline SVGs, emoji characters, or custom icon components:
+
+```vue
+<script setup lang="ts">
+import { Icon } from '@iconify/vue'
+</script>
+
+<template>
+  <Icon icon="mdi:home" />
+  <Icon icon="heroicons:arrow-left" class="size-5" />
+  <Icon icon="lucide:settings" :width="24" />
+</template>
+```
+
+**Preferred icon set: `lucide`** (e.g., `lucide:home`, `lucide:settings`, `lucide:arrow-left`). Only use other sets (`mdi`, `heroicons`, `ph`, `tabler`, `ri`, `solar`, `ion`) if Lucide doesn't have the needed icon. Browse at https://icon-sets.iconify.design/
+
 ## Code Conventions
 
 - Use `<script setup lang="ts">` for all Vue components
@@ -103,9 +143,10 @@ Before implementing any new feature or sub-page, agents MUST:
 4. **No duplicate sub-apps** — check existing directories in `src/views/` before creating a new page
 5. **Each sub-page is self-contained** — only work within your page's directory, do not modify shared files (`App.vue`, `main.css`, `router/index.ts`). Routes are auto-generated from the `meta.ts` file in each page directory
 6. **Responsive** — pages must display well on mobile
-7. **No new dependencies** in `package.json` unless truly needed and approved. However, the following libraries are **pre-approved** and can be used freely without additional approval:
-   - `@vueuse/core` — Collection of 200+ Vue composables (useMouse, useClipboard, useDark, useStorage, etc.)
-   - `@iconify/vue` — 200,000+ icons from 150+ icon sets in one component
+7. **No new dependencies** in `package.json` unless truly needed and approved. The following libraries are **already installed** — use them freely (see "Leveraging Installed Libraries" section above):
+   - `@vueuse/core` — Vue composables
+   - `@iconify/vue` — Icon component
+   The following are **pre-approved** and can be added without additional approval:
    - `vue-konva` — 2D canvas library for drawing, games, and interactive graphics
    - `shiki` — Syntax highlighter
 8. **Author attribution required** — every page must have an `author` field in its `meta.ts` file
