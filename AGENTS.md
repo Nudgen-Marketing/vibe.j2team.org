@@ -204,7 +204,7 @@ Run the generator script:
 pnpm create:page <slug>
 
 # Non-interactive (all fields via flags — use this in scripts and AI agents)
-pnpm create:page <slug> --name "Display Name" --description "Page description" --author "Author" --category game [--facebook "https://..."]
+pnpm create:page <slug> --name "Display Name" --description "Page description" --author "Author" --category game [--facebook "https://..."] [--hide-toolbar]
 ```
 
 Available categories: `game`, `tool`, `fun`, `learn`, `spiritual`, `connect`, `other`.
