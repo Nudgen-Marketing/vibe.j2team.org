@@ -218,7 +218,7 @@ const getRawY = (val: number) => {
 }
 
 let marketInt: ReturnType<typeof setInterval> | undefined
-let hookSwingInt: ReturnType<typeof setInterval> | undefined
+let hookSwingRaf: number | undefined
 
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.code === 'Space' && currentView.value === 'Mining') {
@@ -229,11 +229,13 @@ const handleKeydown = (e: KeyboardEvent) => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
 
-  hookSwingInt = setInterval(() => {
+  const swingHook = () => {
     if (!isHookMoving.value) {
       hookAngle.value = Math.sin(Date.now() / 600) * 50
     }
-  }, 30)
+    hookSwingRaf = requestAnimationFrame(swingHook)
+  }
+  hookSwingRaf = requestAnimationFrame(swingHook)
 
   let lp = selectedStock.value.price
   for (let i = 0; i < 40; i++) {
@@ -282,7 +284,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
   if (marketInt) clearInterval(marketInt)
-  if (hookSwingInt) clearInterval(hookSwingInt)
+  if (hookSwingRaf) cancelAnimationFrame(hookSwingRaf)
 })
 </script>
 
