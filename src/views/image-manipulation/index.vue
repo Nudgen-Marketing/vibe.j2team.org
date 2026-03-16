@@ -765,6 +765,7 @@ watch([cropX, cropY, cropWidth, cropHeight], () => {
                   <img
                     :src="img.src"
                     :alt="`Image ${index + 1}`"
+                    loading="lazy"
                     class="w-full h-auto border border-border-default"
                   />
                   <button

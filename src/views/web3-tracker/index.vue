@@ -660,6 +660,7 @@ const filteredAssets = computed(() => {
                   <img
                     v-if="isUrlLogo(asset.logo)"
                     :src="asset.logo"
+                    loading="lazy"
                     class="w-full h-full object-contain"
                     @error="
                       (e) =>
