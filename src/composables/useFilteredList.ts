@@ -54,7 +54,7 @@ export function useFilteredList<T>(options: UseFilteredListOptions<T>): UseFilte
         if ((entry as Record<string, unknown>)[categoryField] !== category) return false
       }
       if (query) {
-        return searchFields.some((field) => entry._normalized[field].includes(query))
+        return searchFields.some((field) => entry._normalized[field]?.includes(query))
       }
       return true
     })
