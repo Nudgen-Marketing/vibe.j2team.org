@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 import { refDebounced } from '@vueuse/core'
 import { Icon } from '@iconify/vue'
 import { usePagesStore } from '@/stores/usePagesStore'
+import type { PageInfo } from '@/types/page'
 import type { CategoryId } from '@/data/categories'
 import { normalize } from '@/utils/text'
 import { useSearchShortcut } from '@/composables/useSearchShortcut'
@@ -58,17 +59,27 @@ const bookmarkCategoryCounts = computed(() => {
   return counts
 })
 
+// Pre-normalize once so normalize() doesn't re-run on every search/filter change
+type NormalizedPage = PageInfo & { _name: string; _desc: string; _author: string }
+
+const normalizedBookmarks = computed<NormalizedPage[]>(() =>
+  bookmarkedPages.value.map((p) => ({
+    ...p,
+    _name: normalize(p.name),
+    _desc: normalize(p.description),
+    _author: normalize(p.author),
+  })),
+)
+
 const filteredBookmarks = computed(() => {
   const query = normalize(debouncedQuery.value.trim())
   const category = activeCategory.value
 
-  return bookmarkedPages.value.filter((page) => {
+  return normalizedBookmarks.value.filter((page) => {
     if (category && page.category !== category) return false
     if (query) {
       return (
-        normalize(page.name).includes(query) ||
-        normalize(page.description).includes(query) ||
-        normalize(page.author).includes(query)
+        page._name.includes(query) || page._desc.includes(query) || page._author.includes(query)
       )
     }
     return true
