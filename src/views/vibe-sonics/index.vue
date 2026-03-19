@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, shallowRef } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, shallowRef } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRafFn } from '@vueuse/core'
-import { createHighlighterCore, type HighlighterCore } from 'shiki/core'
-import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
+import type { HighlighterCore } from 'shiki/core'
 
 const codeInput = ref(`function helloVibe() {
   const message = "Welcome to J2TEAM";
@@ -191,12 +190,21 @@ function togglePlay() {
 }
 
 onMounted(async () => {
+  const [{ createHighlighterCore }, { createJavaScriptRegexEngine }] = await Promise.all([
+    import('shiki/core'),
+    import('shiki/engine/javascript'),
+  ])
   highlighter.value = await createHighlighterCore({
     themes: [import('@shikijs/themes/vitesse-dark')],
     langs: [import('@shikijs/langs/javascript')],
     engine: createJavaScriptRegexEngine(),
   })
   updateHighlighting()
+})
+
+onBeforeUnmount(() => {
+  highlighter.value?.dispose()
+  audioCtx?.close()
 })
 
 watch(codeInput, () => {
