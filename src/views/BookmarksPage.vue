@@ -14,6 +14,7 @@ import { useRecentlyViewedStore } from '@/stores/useRecentlyViewedStore'
 import { useDraggable } from '@/composables/useDraggable'
 import PageCard from '@/components/PageCard.vue'
 import CategoryFilter from '@/components/CategoryFilter.vue'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 
 const favoritesStore = useFavoritesStore()
 const { favoritePaths } = storeToRefs(favoritesStore)
@@ -94,9 +95,11 @@ useSearchShortcut(searchInputRef)
 <template>
   <div class="min-h-screen bg-bg-deep text-text-primary font-body">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      <AppBreadcrumb :items="[{ label: 'Yêu thích' }]" />
+
       <!-- Header -->
       <h1
-        class="font-display text-3xl sm:text-4xl font-bold text-text-primary flex items-center gap-3"
+        class="mt-8 font-display text-3xl sm:text-4xl font-bold text-text-primary flex items-center gap-3"
       >
         <span class="text-accent-coral font-display text-sm tracking-widest">//</span>
         Yêu thích
@@ -246,14 +249,6 @@ useSearchShortcut(searchInputRef)
           />
         </div>
       </div>
-
-      <!-- Back to home -->
-      <RouterLink
-        to="/"
-        class="mt-16 inline-flex items-center gap-2 border border-border-default bg-bg-surface px-5 py-2.5 text-sm text-text-secondary transition hover:border-accent-coral hover:text-text-primary"
-      >
-        &larr; Về trang chủ
-      </RouterLink>
     </div>
   </div>
 </template>

@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import AppBreadcrumb from '@/components/AppBreadcrumb.vue'
 </script>
 
 <template>
   <div class="min-h-screen bg-bg-deep text-text-primary font-body">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+      <AppBreadcrumb :items="[{ label: 'Chính sách nội dung' }]" />
+
       <h1
-        class="font-display text-3xl sm:text-4xl font-bold text-text-primary flex items-center gap-3"
+        class="mt-8 font-display text-3xl sm:text-4xl font-bold text-text-primary flex items-center gap-3"
       >
         <span class="text-accent-coral font-display text-sm tracking-widest">//</span>
         Chính sách nội dung
@@ -141,13 +143,6 @@ import { RouterLink } from 'vue-router'
           việc bạn đồng ý tuân thủ phiên bản mới nhất của chính sách.
         </p>
       </div>
-
-      <RouterLink
-        to="/"
-        class="mt-12 inline-flex items-center gap-2 border border-border-default bg-bg-surface px-5 py-2.5 text-sm text-text-secondary transition hover:border-accent-coral hover:text-text-primary"
-      >
-        &larr; Về trang chủ
-      </RouterLink>
     </div>
   </div>
 </template>
