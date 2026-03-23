@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useEventListener } from '@vueuse/core'
 import type { Cell } from './composables/useGrid'
 import { useGrid } from './composables/useGrid'
 import { usePathfinding } from './composables/usePathfinding'
@@ -9,9 +10,11 @@ import { algorithmNotes } from './data/algorithmNotes'
 
 const speed = ref(20)
 const explored = ref(0)
+const pathNotFound = ref(false)
 const algorithm = ref<'astar' | 'bfs' | 'dfs' | 'dijkstra' | 'prim' | 'greedy'>('astar')
 
-const { grid, rows, cols, start, end, toggleWall, clearGrid, resetVisited, randomWalls } = useGrid()
+const { grid, rows, cols, start, end, toggleWall, setWall, clearGrid, resetVisited, randomWalls } =
+  useGrid()
 
 const { runAStar, runBFS, runDFS, runDijkstra, runPrim, runGreedy } = usePathfinding(
   grid,
@@ -19,7 +22,51 @@ const { runAStar, runBFS, runDFS, runDijkstra, runPrim, runGreedy } = usePathfin
   cols,
 )
 
-function clickCell(cell: Cell) {
+const gridContainerRef = ref<HTMLElement | null>(null)
+const isDragging = ref(false)
+const lastCell = ref<Cell | null>(null)
+const mouseDownCell = ref<Cell | null>(null)
+
+function getLineCells(r0: number, c0: number, r1: number, c1: number): { r: number; c: number }[] {
+  const cells: { r: number; c: number }[] = []
+  const dr = Math.abs(r1 - r0)
+  const dc = Math.abs(c1 - c0)
+  const sr = r0 < r1 ? 1 : -1
+  const sc = c0 < c1 ? 1 : -1
+  let err = dr - dc
+  let r = r0
+  let c = c0
+  while (true) {
+    cells.push({ r, c })
+    if (r === r1 && c === c1) break
+    const e2 = 2 * err
+    if (e2 > -dc) {
+      err -= dc
+      r += sr
+    }
+    if (e2 < dr) {
+      err += dr
+      c += sc
+    }
+  }
+  return cells
+}
+
+function getCellFromPoint(clientX: number, clientY: number): Cell | null {
+  const el = gridContainerRef.value
+  if (!el) return null
+  const rect = el.getBoundingClientRect()
+  const cellWidth = rect.width / cols
+  const cellHeight = rect.height / rows
+  const c = Math.floor((clientX - rect.left) / cellWidth)
+  const r = Math.floor((clientY - rect.top) / cellHeight)
+  if (r < 0 || r >= rows || c < 0 || c >= cols) return null
+  return grid.value[r]?.[c] ?? null
+}
+
+function onMouseDown(cell: Cell, e: MouseEvent) {
+  e.preventDefault()
+
   if (!start.value) {
     cell.type = 'start'
     start.value = cell
@@ -32,35 +79,74 @@ function clickCell(cell: Cell) {
     return
   }
 
-  toggleWall(cell)
+  if (cell.type === 'start' || cell.type === 'end') return
+
+  mouseDownCell.value = cell
+  lastCell.value = cell
 }
+
+function onMouseMove(e: MouseEvent) {
+  if (mouseDownCell.value === null) return
+  const cell = getCellFromPoint(e.clientX, e.clientY)
+  if (!cell || cell === lastCell.value) return
+  if (cell.type === 'start' || cell.type === 'end') return
+
+  if (!isDragging.value) isDragging.value = true
+
+  const cells = getLineCells(lastCell.value!.r, lastCell.value!.c, cell.r, cell.c)
+  for (const { r, c } of cells) {
+    const target = grid.value[r]?.[c]
+    if (target && target.type !== 'start' && target.type !== 'end') {
+      setWall(target)
+    }
+  }
+  lastCell.value = cell
+}
+
+function onMouseUp() {
+  if (isDragging.value) {
+    isDragging.value = false
+    lastCell.value = null
+    mouseDownCell.value = null
+    return
+  }
+  if (mouseDownCell.value) {
+    toggleWall(mouseDownCell.value)
+    mouseDownCell.value = null
+  }
+}
+
+useEventListener(document, 'mousemove', onMouseMove)
+useEventListener(document, 'mouseup', onMouseUp)
 
 async function startSearch() {
   if (!start.value || !end.value) return
 
   explored.value = 0
-
+  pathNotFound.value = false
   resetVisited()
 
+  let found = false
   if (algorithm.value === 'astar') {
-    await runAStar(start.value, end.value, speed.value, explored)
+    found = await runAStar(start.value, end.value, speed.value, explored)
+  } else if (algorithm.value === 'bfs') {
+    found = await runBFS(start.value, end.value, speed.value, explored)
+  } else if (algorithm.value === 'dfs') {
+    found = await runDFS(start.value, end.value, speed.value, explored)
+  } else if (algorithm.value === 'dijkstra') {
+    found = await runDijkstra(start.value, end.value, speed.value, explored)
+  } else if (algorithm.value === 'prim') {
+    found = await runPrim(start.value, end.value, speed.value, explored)
+  } else if (algorithm.value === 'greedy') {
+    found = await runGreedy(start.value, end.value, speed.value, explored)
   }
 
-  if (algorithm.value === 'bfs') {
-    await runBFS(start.value, end.value, speed.value, explored)
-  }
-  if (algorithm.value === 'dfs') {
-    await runDFS(start.value, end.value, speed.value, explored)
-  }
-  if (algorithm.value === 'dijkstra') {
-    await runDijkstra(start.value, end.value, speed.value, explored)
-  }
-  if (algorithm.value === 'prim') {
-    await runPrim(start.value, end.value, speed.value, explored)
-  }
-  if (algorithm.value === 'greedy') {
-    await runGreedy(start.value, end.value, speed.value, explored)
-  }
+  if (!found) pathNotFound.value = true
+}
+
+function handleClear() {
+  pathNotFound.value = false
+  clearGrid()
 }
 </script>
 
@@ -84,7 +170,8 @@ async function startSearch() {
       </h1>
 
       <p class="text-text-secondary text-sm mb-4 sm:mb-6 animate-fade-up animate-delay-1">
-        Click ô để đặt Start → End → Tường. Chọn thuật toán rồi bấm Start.
+        Click ô để đặt Start → End → Tường. Có thể giữ chuột và kéo để vẽ tường nhanh. Chọn thuật
+        toán rồi bấm Start.
       </p>
 
       <div class="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 animate-fade-up animate-delay-2">
@@ -108,7 +195,7 @@ async function startSearch() {
         </button>
 
         <button
-          @click="clearGrid"
+          @click="handleClear"
           class="shrink-0 px-4 py-2 border border-border-default bg-bg-surface text-text-secondary text-sm transition hover:border-accent-coral hover:text-text-primary"
         >
           Clear
@@ -142,6 +229,7 @@ async function startSearch() {
             class="w-full max-w-[400px] aspect-square border border-border-default bg-bg-surface p-1.5 sm:p-2"
           >
             <div
+              ref="gridContainerRef"
               class="grid w-full h-full"
               :style="{
                 gridTemplateColumns: `repeat(${cols}, 1fr)`,
@@ -152,8 +240,8 @@ async function startSearch() {
                 <div
                   v-for="cell in row"
                   :key="cell.r + '-' + cell.c"
-                  @click="clickCell(cell)"
-                  class="border border-border-default cursor-pointer transition touch-manipulation min-w-0 min-h-0"
+                  @mousedown="onMouseDown(cell, $event)"
+                  class="border border-border-default cursor-pointer transition touch-manipulation min-w-0 min-h-0 select-none"
                   :class="{
                     'bg-accent-coral': cell.type === 'start',
                     'bg-accent-amber': cell.type === 'end',
@@ -167,6 +255,9 @@ async function startSearch() {
           </div>
           <p class="mt-3 text-xs text-text-dim font-display tracking-wide">
             Nodes explored: {{ explored }}
+          </p>
+          <p v-if="pathNotFound" class="mt-2 text-sm text-accent-coral font-body">
+            Không tìm thấy đường đi giữa Start và End.
           </p>
         </div>
 
