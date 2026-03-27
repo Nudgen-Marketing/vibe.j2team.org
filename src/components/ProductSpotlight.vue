@@ -22,21 +22,13 @@ const { product, visible, dismiss } = useSpotlightProduct()
 
         <!-- Product link -->
         <a :href="product.url" target="_blank" rel="noopener noreferrer" class="block">
-          <div class="flex items-center gap-3">
-            <img
-              :src="product.logo_url"
-              :alt="product.name"
-              loading="lazy"
-              class="w-10 h-10 object-cover flex-shrink-0"
-            />
-            <div class="flex-1 min-w-0">
-              <span class="font-display font-semibold text-text-primary text-sm leading-tight">
-                {{ product.name }}
-              </span>
-              <p class="text-xs text-text-secondary mt-1 line-clamp-2 leading-relaxed">
-                {{ product.tagline }}
-              </p>
-            </div>
+          <div>
+            <span class="font-display font-semibold text-text-primary text-sm leading-tight">
+              {{ product.name }}
+            </span>
+            <p class="text-xs text-text-secondary mt-1 line-clamp-2 leading-relaxed">
+              {{ product.tagline }}
+            </p>
           </div>
 
           <!-- Footer: desktop only -->
