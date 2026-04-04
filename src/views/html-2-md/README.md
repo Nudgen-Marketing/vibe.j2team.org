@@ -1,4 +1,4 @@
-# HTML → Markdown
+# HTML 2 Markdown
 
 A browser-based tool that converts any public webpage into clean Markdown — preview it on the spot, copy it to clipboard, or download the `.md` file.
 
