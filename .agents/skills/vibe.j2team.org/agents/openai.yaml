@@ -1,0 +1,6 @@
+interface:
+  display_name: "Vibe.j2team.org"
+  short_description: "Repo-specific patterns and workflows for vibe.j2team.org"
+  default_prompt: "Use the vibe.j2team.org repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
